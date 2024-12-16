@@ -2,40 +2,62 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.Scanner;
 
-public class Lab_13_FileListMaker {
+public class FileListMaker
+{
     private static final Scanner scanner = new Scanner(System.in);
     private static final ArrayList<String> myArrList = new ArrayList<>();
     private static boolean needsToBeSaved = false;
+    private static String currentFilename = "";
 
-    public static void main(String[] args) {
+    public static void main(String[] args)
+    {
         boolean running = true;
-        while (running) {
+        while (running)
+        {
             displayMenu();
             String choice = SafeInput.getRegExString(scanner, "Enter a command", "[AaDdIiPpQqMmOoSsCcVv]");
 
-            if (choice.equalsIgnoreCase("A")) {
+            if (choice.equalsIgnoreCase("A"))
+            {
                 addItem();
-            } else if (choice.equalsIgnoreCase("D")) {
+            }
+            else if (choice.equalsIgnoreCase("D"))
+            {
                 deleteItem();
-            } else if (choice.equalsIgnoreCase("I")) {
+            }
+            else if (choice.equalsIgnoreCase("I"))
+            {
                 insertItem();
-            } else if (choice.equalsIgnoreCase("M")) {
+            }
+            else if (choice.equalsIgnoreCase("M"))
+            {
                 moveItem();
-            } else if (choice.equalsIgnoreCase("O")) {
+            }
+            else if (choice.equalsIgnoreCase("O"))
+            {
                 openFile();
-            } else if (choice.equalsIgnoreCase("S")) {
+            }
+            else if (choice.equalsIgnoreCase("S"))
+            {
                 saveFile();
-            } else if (choice.equalsIgnoreCase("C")) {
+            }
+            else if (choice.equalsIgnoreCase("C"))
+            {
                 clearList();
-            } else if (choice.equalsIgnoreCase("V")) {
+            }
+            else if (choice.equalsIgnoreCase("V"))
+            {
                 printList();
-            } else if (choice.equalsIgnoreCase("Q")) {
+            }
+            else if (choice.equalsIgnoreCase("Q"))
+            {
                 running = quitProgram();
             }
         }
     }
 
-    private static void displayMenu() {
+    private static void displayMenu()
+    {
         System.out.println("\nCurrent List:");
         printList();
         System.out.println("\nMenu:");
@@ -50,95 +72,164 @@ public class Lab_13_FileListMaker {
         System.out.println("Q – Quit the program");
     }
 
-    private static void addItem() {
+    private static void addItem()
+    {
         String item = SafeInput.getNonZeroLenString(scanner, "Enter an item to add");
         myArrList.add(item);
         needsToBeSaved = true;
     }
 
-    private static void deleteItem() {
-        if (myArrList.isEmpty()) {
+    private static void deleteItem()
+    {
+        if (myArrList.isEmpty())
+        {
             System.out.println("The list is empty. Nothing to delete.");
-        } else {
+        }
+        else
+        {
             int index = SafeInput.getRangedInt(scanner, "Enter the index of the item to delete", 1, myArrList.size());
-            myArrList.remove(index - 1);
+            myArrList.remove(index - 1);  // Convert to 0-based index
             needsToBeSaved = true;
         }
     }
 
-    private static void insertItem() {
-        if (myArrList.isEmpty()) {
+    private static void insertItem()
+    {
+        if (myArrList.isEmpty())
+        {
             System.out.println("The list is empty. Use the Add option to add the first item.");
-        } else {
+        }
+        else
+        {
             int index = SafeInput.getRangedInt(scanner, "Enter the index to insert the item at", 1, myArrList.size() + 1);
             String item = SafeInput.getNonZeroLenString(scanner, "Enter an item to insert");
-            myArrList.add(index - 1, item);
+            myArrList.add(index - 1, item);  // Convert to 0-based index
             needsToBeSaved = true;
         }
     }
 
-    private static void moveItem() {
-        if (myArrList.isEmpty()) {
+    private static void moveItem()
+    {
+        if (myArrList.isEmpty())
+        {
             System.out.println("The list is empty. Nothing to move.");
-        } else {
+        }
+        else
+        {
             int fromIndex = SafeInput.getRangedInt(scanner, "Enter the index of the item to move", 1, myArrList.size());
             int toIndex = SafeInput.getRangedInt(scanner, "Enter the index to move the item to", 1, myArrList.size());
-            String item = myArrList.remove(fromIndex - 1);
-            myArrList.add(toIndex - 1, item);
+            String item = myArrList.remove(fromIndex - 1);  // Remove the item
+            myArrList.add(toIndex - 1, item);  // Reinsert the item
             needsToBeSaved = true;
         }
     }
 
-    private static void openFile() {
-        if (needsToBeSaved) {
-            if (!SafeInput.getYNConfirm(scanner, "There are unsaved changes. Do you want to continue without saving?")) {
+    private static void openFile()
+    {
+        if (needsToBeSaved)
+        {
+            if (!SafeInput.getYNConfirm(scanner, "There are unsaved changes. Do you want to continue without saving?"))
+            {
                 saveFile();
             }
         }
-        String filename = SafeInput.getNonZeroLenString(scanner, "Enter the filename to open") + ".txt";
-        try (BufferedReader reader = new BufferedReader(new FileReader(filename))) {
+
+        // Using absolute path
+        String filename = SafeInput.getNonZeroLenString(scanner, "Enter the filename to open (without extension)") + ".txt";
+        String filePath = "C:\\Users\\ambie\\IdeaProjects\\Lab_13_FileListMaker\\src\\" + filename;
+
+        System.out.println("Attempting to open file: " + filePath); // Debug print statement
+
+        File file = new File(filePath);
+        if (file.exists())
+        {
             myArrList.clear();
-            String line;
-            while ((line = reader.readLine()) != null) {
-                myArrList.add(line);
+            try (Scanner fileScanner = new Scanner(file))
+            {
+                while (fileScanner.hasNextLine())
+                {
+                    String line = fileScanner.nextLine();
+                    myArrList.add(line);
+                }
+                needsToBeSaved = false;
+                currentFilename = filePath;
             }
-            needsToBeSaved = false;
-        } catch (IOException e) {
-            System.out.println("An error occurred while opening the file: " + e.getMessage());
+            catch (IOException e)
+            {
+                System.out.println("An error occurred while opening the file: " + e.getMessage());
+            }
+        }
+        else
+        {
+            System.out.println("File not found: " + filePath);
         }
     }
 
-    private static void saveFile() {
-        String filename = SafeInput.getNonZeroLenString(scanner, "Enter the filename to save") + ".txt";
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(filename))) {
-            for (String item : myArrList) {
+
+    private static void saveFile()
+    {
+        String filename;
+        if (currentFilename.isEmpty())
+        {
+            filename = SafeInput.getNonZeroLenString(scanner, "Enter the filename to save (without extension)") + ".txt";
+        }
+        else
+        {
+            filename = currentFilename;
+        }
+
+        // Construct the full path to save the file in the src directory
+        String filePath = "C:\\Users\\ambie\\IdeaProjects\\Lab_13_FileListMaker\\src\\" + filename;
+
+        System.out.println("Saving file to: " + filePath); // Debug print statement
+
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath)))
+        {
+            for (String item : myArrList)
+            {
                 writer.write(item);
                 writer.newLine();
             }
             needsToBeSaved = false;
-        } catch (IOException e) {
+            currentFilename = filePath;
+            System.out.println("File saved successfully!");
+        }
+        catch (IOException e)
+        {
             System.out.println("An error occurred while saving the file: " + e.getMessage());
         }
     }
 
-    private static void clearList() {
+
+    private static void clearList()
+    {
         myArrList.clear();
         needsToBeSaved = true;
     }
 
-    private static void printList() {
-        if (myArrList.isEmpty()) {
+    private static void printList()
+    {
+        if (myArrList.isEmpty())
+        {
             System.out.println("The list is empty.");
-        } else {
-            for (int i = 0; i < myArrList.size(); i++) {
+        }
+        else
+        {
+            for (int i = 0; i < myArrList.size(); i++)
+            {
                 System.out.println((i + 1) + ": " + myArrList.get(i));
             }
         }
     }
 
-    private static boolean quitProgram() {
-        if (needsToBeSaved) {
-            return !SafeInput.getYNConfirm(scanner, "You have unsaved changes. Are you sure you want to quit without saving?");
+    private static boolean quitProgram()
+    {
+        if (needsToBeSaved)
+        {
+            if (SafeInput.getYNConfirm(scanner, "You have unsaved changes. Do you want to save before quitting?"))
+            {
+                saveFile();
+            }
         }
         return false;
     }
